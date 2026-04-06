@@ -58,7 +58,6 @@ jobs:
         node-version: ${{ matrix.node-version }}
 
     - name: Install frontend dependencies
-      working-directory: ./frontend
       run: npm install --prefix frontend      
 
     - name: Build frontend
