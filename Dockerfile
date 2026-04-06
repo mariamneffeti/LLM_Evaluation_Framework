@@ -6,6 +6,8 @@ WORKDIR /app
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
+    build-essential \
+    gcc \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy and install Python dependencies
