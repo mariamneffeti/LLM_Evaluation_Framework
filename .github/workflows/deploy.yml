@@ -7,7 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
 
 jobs:
   build-and-push:
@@ -19,6 +18,10 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+
+    - name: Set lower case IMAGE_NAME
+      run: |
+        echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v3
@@ -37,8 +40,6 @@ jobs:
         images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
         tags: |
           type=ref,event=branch
-          type=semver,pattern={{version}}
-          type=semver,pattern={{major}}.{{minor}}
           type=sha
 
     - name: Build and push backend Docker image
@@ -55,8 +56,10 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
     steps:
+    - name: Set lower case IMAGE_NAME
+      run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
     - name: Deploy to AWS EC2 via SSH
       env:
         SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_KEY }}
@@ -71,6 +74,7 @@ jobs:
         ssh $USER@$HOST << 'EOF'
           cd /app
           git pull origin main
+          # Ensure your docker-compose.yml also uses the lowercase name!
           docker-compose down
           docker-compose pull
           docker-compose up -d
@@ -82,8 +86,10 @@ jobs:
     needs: build-and-push
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-
     steps:
+    - name: Set lower case IMAGE_NAME
+      run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
+
     - name: Set up Cloud SDK
       uses: google-cloud-github-actions/setup-gcloud@v1
       with:
@@ -92,8 +98,7 @@ jobs:
         export_default_credentials: true
 
     - name: Configure Docker for GCR
-      run: |
-        gcloud auth configure-docker
+      run: gcloud auth configure-docker
 
     - name: Deploy to Google Cloud Run
       run: |
@@ -109,7 +114,6 @@ jobs:
     needs: [build-and-push]
     runs-on: ubuntu-latest
     if: always()
-
     steps:
     - name: Send Slack notification
       uses: slackapi/slack-github-action@v1.24.0
@@ -122,7 +126,7 @@ jobs:
                 "type": "section",
                 "text": {
                   "type": "mrkdwn",
-                  "text": "*LLM Evaluation Framework*\nBuild: *${{ job.status }}*\nRef: `${{ github.ref }}`\nCommit: <${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}|${{ github.sha }}>"
+                  "text": "*LLM Evaluation Framework*\nBuild: *${{ job.status }}*\nRef: `${{ github.ref }}`"
                 }
               }
             ]
