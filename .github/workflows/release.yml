@@ -55,10 +55,24 @@ jobs:
         cp QUICKSTART.md public/quickstart.md
         cp TESTING.md public/testing.md
 
-    - name: Deploy to GitHub Pages
+    - name: Upload pages artifact
       uses: actions/upload-pages-artifact@v3
       with:
         path: public/
+
+  deploy-pages:
+    runs-on: ubuntu-latest
+    needs: publish-docs
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
 
   github-release-notes:
     runs-on: ubuntu-latest

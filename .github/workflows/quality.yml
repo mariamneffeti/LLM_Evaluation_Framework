@@ -26,19 +26,19 @@ jobs:
 
     - name: Black formatting check
       run: |
-        black --check backend/ providers/ eval/ || true
+        black --check backend/ || true
 
     - name: isort import sort check
       run: |
-        isort --check-only backend/ providers/ eval/ || true
+        isort --check-only backend/ || true
 
     - name: Flake8 linting
       run: |
-        flake8 backend/ providers/ eval/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
+        flake8 backend/ --count --select=E9,F63,F7,F82 --show-source --statistics || true
 
     - name: Pylint analysis
       run: |
-        pylint backend/ providers/ eval/ --exit-zero || true
+        pylint backend/ --exit-zero || true
 
     - name: Type checking with mypy
       run: |

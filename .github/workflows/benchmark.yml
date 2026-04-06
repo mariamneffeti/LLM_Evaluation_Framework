@@ -2,8 +2,7 @@ name: Scheduled Benchmark
 
 on:
   schedule:
-    - cron: '0 2 * * *'
-    - cron: '0 2 * * 1'
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
   workflow_dispatch:
 
 jobs:
@@ -56,12 +55,12 @@ jobs:
       continue-on-error: true
 
     - name: Create GitHub Release with results
-      uses: actions/create-release@v1
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: benchmark-${{ github.run_number }}
-        release_name: Benchmark Run ${{ github.run_number }}
+        name: Benchmark Run ${{ github.run_number }}
         body: Daily benchmark results
         draft: false
         prerelease: true
