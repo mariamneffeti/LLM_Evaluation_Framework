@@ -1,0 +1,171 @@
+/* BenchmarkDetail.css */
+.benchmark-detail {
+  animation: fadeIn 0.3s ease-in;
+}
+
+.benchmark-detail .header {
+  margin-bottom: 30px;
+}
+
+.benchmark-detail h1 {
+  font-size: 28px;
+  color: #1f2937;
+  margin-bottom: 8px;
+}
+
+.benchmark-detail .header p {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.results-section {
+  margin-top: 40px;
+}
+
+.results-section h2 {
+  font-size: 20px;
+  color: #1f2937;
+  margin-bottom: 20px;
+}
+
+.model-results {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 30px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.model-results h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: #667eea;
+  margin-bottom: 16px;
+}
+
+.results-table {
+  overflow-x: auto;
+}
+
+.results-table table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.results-table thead {
+  background: #f9fafb;
+}
+
+.results-table th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 700;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.results-table td {
+  padding: 12px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.result-row {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.result-row:hover {
+  background: #f9fafb;
+}
+
+.expand-icon {
+  text-align: center;
+  color: #6b7280;
+  transition: transform 0.2s;
+}
+
+.result-row:hover .expand-icon {
+  transform: scale(1.2);
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.badge-success {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-warning {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.result-expanded {
+  background: #f9fafb;
+}
+
+.expanded-content {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.qa-pair {
+  padding: 16px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+
+.qa-pair h4 {
+  font-size: 12px;
+  font-weight: 700;
+  color: #667eea;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.qa-pair p {
+  font-size: 13px;
+  color: #374151;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.metrics div {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+@media (max-width: 768px) {
+  .benchmark-detail h1 {
+    font-size: 20px;
+  }
+
+  .expanded-content {
+    grid-template-columns: 1fr;
+  }
+
+  .results-table {
+    font-size: 11px;
+  }
+
+  .results-table th,
+  .results-table td {
+    padding: 8px;
+  }
+}
