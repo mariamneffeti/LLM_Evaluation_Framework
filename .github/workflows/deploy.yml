@@ -85,35 +85,6 @@ jobs:
         EOF
       continue-on-error: true
 
-  deploy-gcp-cloudrun:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-    - name: Set lower case IMAGE_NAME
-      run: echo "IMAGE_NAME=${GITHUB_REPOSITORY,,}" >> $GITHUB_ENV
-
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: ${{ secrets.GCP_SA_KEY }}
-
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-
-    - name: Configure Docker for GCR
-      run: gcloud auth configure-docker ghcr.io
-
-    - name: Deploy to Google Cloud Run
-      run: |
-        gcloud run deploy llm-eval-backend \
-          --image ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}/backend:latest \
-          --platform managed \
-          --region us-central1 \
-          --allow-unauthenticated \
-          --set-env-vars GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},GITHUB_TOKEN=${{ secrets.GITHUB_TOKEN }},GOOGLE_API_KEY=${{ secrets.GOOGLE_API_KEY }}
-      continue-on-error: true
-
   notify-slack:
     needs: [build-and-push]
     runs-on: ubuntu-latest
