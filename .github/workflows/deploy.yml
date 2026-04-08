@@ -1,5 +1,5 @@
 name: Deploy to Cloud
-
+# This workflow builds the backend Docker image and deploys it to AWS EC2 and Google Cloud Run.
 on:
   push:
     branches: [ main ]
