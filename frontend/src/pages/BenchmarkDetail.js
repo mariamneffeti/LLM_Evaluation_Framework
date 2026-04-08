@@ -17,7 +17,7 @@ function BenchmarkDetail() {
     fetchBenchmark();
   }, [runId]);
 
-  const fetchBenchmark = async () => {
+  const fetchBenchmark = useCallback(async () => {
     try {
       setLoading(true);
       const data = await benchmarkAPI.getBenchmarkResult(runId);
@@ -29,7 +29,8 @@ function BenchmarkDetail() {
     } finally {
       setLoading(false);
     }
-  };
+  }
+)
 
   if (loading) {
     return (
