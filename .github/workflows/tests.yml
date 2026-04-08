@@ -56,6 +56,14 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
+    - name: List files for debugging
+      run: |
+        echo "Current directory:"
+        pwd
+        echo "Root contents:"
+        ls -F
+        echo "Checking for frontend folder:"
+        find . -maxdepth 2 -name "package.json"
 
     - name: Install frontend dependencies
       working-directory: frontend
@@ -64,7 +72,8 @@ jobs:
     - name: Build frontend
       working-directory: ./frontend
       run: npm run build
-      
+    
+
     - name: Debug File Structure
       run: |
         pwd
