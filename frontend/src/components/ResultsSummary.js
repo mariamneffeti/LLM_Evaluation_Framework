@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   BarChart,
   Bar,
@@ -8,9 +7,6 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  Cell,
 } from 'recharts';
 import '../styles/ResultsSummary.css';
 
@@ -19,7 +15,6 @@ function ResultsSummary({ summary }) {
     return <p className="no-data">No results available</p>;
   }
 
-  // Prepare data for charts
   const chartData = Object.entries(summary).map(([model, metrics]) => ({
     name: model.length > 25 ? model.substring(0, 22) + '...' : model,
     fullName: model,
@@ -29,12 +24,11 @@ function ResultsSummary({ summary }) {
     output_tokens: metrics.avg_output_tokens.toFixed(0),
   }));
 
-  const colors = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
   return (
     <div className="results-summary">
       <div className="metrics-grid">
-        {Object.entries(summary).map(([model, metrics], idx) => (
+        {Object.entries(summary).map(([model, metrics]) => (
           <div key={model} className="metric-card">
             <h4>{model.split('-')[0]}</h4>
             <div className="metric-value">
