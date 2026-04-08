@@ -1,4 +1,4 @@
-import React, { useState, useEffect , useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { benchmarkAPI } from '../api/client';
 import { ArrowLeft, Loader } from 'lucide-react';
@@ -13,10 +13,6 @@ function BenchmarkDetail() {
   const [error, setError] = useState(null);
   const [expandedResult, setExpandedResult] = useState(null);
 
-  useEffect(() => {
-    fetchBenchmark();
-  }, [runId]);
-
   const fetchBenchmark = useCallback(async () => {
     try {
       setLoading(true);
@@ -29,8 +25,11 @@ function BenchmarkDetail() {
     } finally {
       setLoading(false);
     }
-  }, [runId]
-);
+  }, [runId]); 
+
+  useEffect(() => {
+    fetchBenchmark();
+  }, [fetchBenchmark]); 
 
   if (loading) {
     return (
@@ -119,7 +118,7 @@ function BenchmarkDetail() {
                           </span>
                         </td>
                         <td>{result.input_tokens + result.output_tokens}</td>
-                        <td className="expand-icon">➕</td>
+                        <td className="expand-icon">{expandedResult === result.question_id ? '➖' : '➕'}</td>
                       </tr>
                       {expandedResult === result.question_id && (
                         <tr className="result-expanded">
@@ -140,7 +139,7 @@ function BenchmarkDetail() {
                               <div className="metrics">
                                 <div>Input Tokens: {result.input_tokens}</div>
                                 <div>Output Tokens: {result.output_tokens}</div>
-                                <div>Total Tokens: {result.tokens.total_tokens}</div>
+                                <div>Total Tokens: {result.tokens?.total_tokens || (result.input_tokens + result.output_tokens)}</div>
                               </div>
                             </div>
                           </td>
