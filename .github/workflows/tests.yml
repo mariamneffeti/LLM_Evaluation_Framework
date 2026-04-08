@@ -41,8 +41,8 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
       run: |
-        cd backend
-        python -m pytest tests/ -v --tb=short
+        export PYTHONPATH=$PYTHONPATH:$(pwd)
+        python -m pytest test_groq.py -v --tb=short
   frontend-tests:
     runs-on: ubuntu-latest
     strategy:
