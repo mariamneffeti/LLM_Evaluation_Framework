@@ -29,8 +29,8 @@ function BenchmarkDetail() {
     } finally {
       setLoading(false);
     }
-  }
-)
+  }, [runId]
+);
 
   if (loading) {
     return (
