@@ -80,3 +80,8 @@ logs/
 .cache/
 .parcel-cache/
 dist/
+
+# Archives and model artifacts
+*.zip
+models/
+
