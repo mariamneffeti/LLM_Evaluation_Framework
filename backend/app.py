@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from eval.benchmark import run_benchmark
 from eval.reporter import report_results
 from providers.groq_provider import GroqProvider
-from providers.github_provider import GithubModelsProvider
+from providers.openai_provider import OpenAIProvider
 from providers.ollama_provider import OllamaProvider
 from providers.gemini_provider import GeminiProvider
 
@@ -36,11 +36,54 @@ app.add_middleware(
 
 # Model providers
 PROVIDERS = {
-    "llama-3.1-70b-versatile": lambda: GroqProvider(api_key=os.getenv("GROQ_API_KEY")),
-    "gpt-4o-mini": lambda: GithubModelsProvider(),
-    "gemini-2.0-flash": lambda: GeminiProvider(),
+    "openai/gpt-oss-20b": lambda: GroqProvider(api_key=os.getenv("GROQ_API_KEY")),
+    "gpt-4o-mini": lambda: OpenAIProvider(),
+    "gemini-3.8-flash": lambda: GeminiProvider(),
     "llama3.1:8b": lambda: OllamaProvider(),
 }
+MODEL_REQUIREMENTS = {
+    "openai/gpt-oss-20b": "GROQ_API_KEY",
+    "gpt-4o-mini": "OPENAI_API_KEY",
+    "gemini-3.8-flash": "GOOGLE_API_KEY",
+}
+
+
+def available_model_names() -> list[str]:
+    return [
+        name for name in PROVIDERS
+        if not MODEL_REQUIREMENTS.get(name) or os.getenv(MODEL_REQUIREMENTS[name])
+    ]
+
+
+def public_summary(summary: dict) -> dict:
+    return {name: metrics for name, metrics in (summary or {}).items() if name != "_error"}
+
+
+def successful_results(results: list) -> list:
+    return [
+        result for result in (results or [])
+        if not str(result.get("response", "")).startswith("Error:")
+    ]
+
+
+def summary_for_run(run) -> dict:
+    results = successful_results(run.results)
+    if results:
+        return calculate_summary(results)
+    if run.results:
+        return {}
+    return public_summary(run.summary)
+
+
+def run_error(run) -> str | None:
+    stored_error = (run.summary or {}).get("_error")
+    if stored_error:
+        return stored_error
+    if run.results and not successful_results(run.results):
+        return "All model requests failed. Check provider configuration and backend logs, then rerun."
+    if not run.results and not public_summary(run.summary):
+        return "This benchmark produced no results. Check backend logs and provider configuration, then rerun."
+    return None
 
 
 def calculate_summary(results: list) -> dict:
@@ -70,6 +113,9 @@ def calculate_summary(results: list) -> dict:
 
 def run_benchmark_task(run_id: str, dataset_path: str, model_names: list, db: Session):
     """Background task to run benchmark."""
+    results = []
+    summary = {}
+    error = None
     try:
         candidates = []
         for model_name in model_names:
@@ -77,25 +123,30 @@ def run_benchmark_task(run_id: str, dataset_path: str, model_names: list, db: Se
                 candidates.append((model_name, PROVIDERS[model_name]()))
         
         if not candidates:
-            print(f"[{run_id}] No valid models specified")
-            return
-        
-        print(f"[{run_id}] Starting benchmark with {len(candidates)} models")
-        results = run_benchmark(dataset_path, candidates)
-        summary = calculate_summary(results)
-        
-        # Save to database
-        run = BenchmarkRun(
-            run_id=run_id,
-            dataset_path=dataset_path,
-            results=results,
-            summary=summary
-        )
-        db.add(run)
-        db.commit()
-        print(f"[{run_id}] Benchmark completed and saved")
+            error = "No configured model providers were selected."
+        else:
+            print(f"[{run_id}] Starting benchmark with {len(candidates)} models")
+            results = run_benchmark(dataset_path, candidates)
+            summary = calculate_summary(results)
+            if not results:
+                error = "All model requests failed. Check backend logs and provider configuration."
     except Exception as e:
-        print(f"[{run_id}] Error: {str(e)}")
+        error = str(e)
+        print(f"[{run_id}] Error: {error}")
+
+    if error:
+        print(f"[{run_id}] Benchmark failed: {error}")
+        summary = {"_error": error}
+
+    run = BenchmarkRun(
+        run_id=run_id,
+        dataset_path=dataset_path,
+        results=results,
+        summary=summary,
+    )
+    db.add(run)
+    db.commit()
+    print(f"[{run_id}] Benchmark {'failed' if error else 'completed'} and saved")
 
 
 @app.get("/")
@@ -107,9 +158,10 @@ def read_root():
 @app.get("/models")
 def get_available_models():
     """Get list of available models."""
+    models = available_model_names()
     return {
-        "models": list(PROVIDERS.keys()),
-        "count": len(PROVIDERS)
+        "models": models,
+        "count": len(models)
     }
 
 
@@ -119,12 +171,20 @@ def run_benchmark_endpoint(request: BenchmarkRequest, background_tasks: Backgrou
     run_id = str(uuid.uuid4())[:8]
     
     # Use all models if not specified
-    model_names = request.models or list(PROVIDERS.keys())
+    model_names = request.models or available_model_names()
     
     # Validate models
     invalid_models = [m for m in model_names if m not in PROVIDERS]
     if invalid_models:
         raise HTTPException(status_code=400, detail=f"Invalid models: {invalid_models}")
+
+    unavailable_models = [model for model in model_names if model not in available_model_names()]
+    if unavailable_models:
+        required_keys = sorted({MODEL_REQUIREMENTS[model] for model in unavailable_models})
+        raise HTTPException(
+            status_code=400,
+            detail=f"Configure the required environment variable(s): {', '.join(required_keys)}",
+        )
     
     # Add background task
     background_tasks.add_task(run_benchmark_task, run_id, request.dataset_path, model_names, db)
@@ -149,8 +209,9 @@ def get_benchmark_result(run_id: str, db: Session = Depends(get_db)):
         "run_id": run.run_id,
         "timestamp": run.timestamp.isoformat() if run.timestamp else None,
         "dataset_path": run.dataset_path,
-        "results": run.results,  # Already a list of dicts from JSON
-        "summary": run.summary
+        "results": successful_results(run.results),
+        "summary": summary_for_run(run),
+        "error": run_error(run),
     }
 
 
@@ -165,8 +226,9 @@ def list_benchmarks(limit: int = 20, db: Session = Depends(get_db)):
             "run_id": run.run_id,
             "timestamp": run.timestamp,
             "dataset_path": run.dataset_path,
-            "models": list(run.summary.keys()) if run.summary else [],
-            "summary": run.summary
+            "models": list(summary_for_run(run).keys()),
+            "summary": summary_for_run(run),
+            "error": run_error(run),
         })
     
     return {"runs": summaries, "total": len(summaries)}
@@ -184,7 +246,7 @@ def compare_benchmarks(run_ids: str, db: Session = Depends(get_db)):
             runs.append({
                 "run_id": run.run_id,
                 "timestamp": run.timestamp,
-                "summary": run.summary
+                "summary": summary_for_run(run)
             })
     
     if not runs:

@@ -74,6 +74,8 @@ function BenchmarkDetail() {
         <p>{new Date(benchmark.timestamp).toLocaleString()}</p>
       </div>
 
+      {benchmark.error && <div className="error-banner">{benchmark.error}</div>}
+
       <ResultsSummary summary={benchmark.summary} />
 
       <div className="results-section">

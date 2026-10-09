@@ -2,9 +2,9 @@ import re
 import json
 
 PRICING = {
-    "llama-3.1-70b-versatile": {"input": 0.0, "output": 0.0}, 
+    "openai/gpt-oss-20b":     {"input": 0.0, "output": 0.0},
     "gpt-4o-mini":             {"input": 0.0, "output": 0.0},  
-    "gemini-1.5-flash":        {"input": 0.0, "output": 0.0},  
+    "gemini-3.8-flash":        {"input": 0.0, "output": 0.0},
     "llama3.1:8b":             {"input": 0.0, "output": 0.0},  
 }
 

@@ -12,6 +12,7 @@ def load_dataset(path):
 def run_benchmark(dataset_path : str, candidates: list[tuple]) -> list[dict]:
     dataset = load_dataset(dataset_path)
     all_results = []
+    failures = {}
     for model_name, provider in candidates:
         print(f"Running benchmark for {model_name}...")
         for item in dataset:
@@ -36,7 +37,11 @@ def run_benchmark(dataset_path : str, candidates: list[tuple]) -> list[dict]:
                 )
                 all_results.append(result)
             except Exception as e:
+                failures.setdefault(model_name, str(e))
                 print(f"Error processing item {item['id']} with model {model_name}: {e}")
+    if not all_results and failures:
+        details = "; ".join(f"{model}: {message}" for model, message in failures.items())
+        raise RuntimeError(f"No model responses were returned. {details}")
     if all_results:
         _save_results(all_results, dataset_path)
     return all_results

@@ -10,6 +10,7 @@ function Dashboard() {
   const [models, setModels] = useState([]);
   const [selectedModels, setSelectedModels] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [pendingRunId, setPendingRunId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
@@ -17,6 +18,43 @@ function Dashboard() {
   useEffect(() => {
     fetchData();
   }, []);
+
+  useEffect(() => {
+    if (!pendingRunId) return undefined;
+
+    let cancelled = false;
+    let timer;
+    let attempts = 0;
+
+    const pollForRun = async () => {
+      try {
+        const data = await benchmarkAPI.listBenchmarks(20);
+        if (cancelled) return;
+        const runs = data.runs || [];
+        setBenchmarks(runs);
+        if (runs.some(run => run.run_id === pendingRunId)) {
+          setPendingRunId(null);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+      }
+
+      attempts += 1;
+      if (attempts >= 150) {
+        setPendingRunId(null);
+        setError(`Run ${pendingRunId} has not finished after five minutes. Check the backend logs.`);
+        return;
+      }
+      timer = setTimeout(pollForRun, 2000);
+    };
+
+    pollForRun();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [pendingRunId]);
 
   const fetchData = async () => {
     try {
@@ -44,9 +82,7 @@ function Dashboard() {
       
       // Show success message
       alert(`Benchmark started! Run ID: ${result.run_id}`);
-      
-      // Refresh benchmarks list
-      setTimeout(fetchData, 500);
+      setPendingRunId(result.run_id);
     } catch (err) {
       setError('Failed to start benchmark');
       console.error(err);
@@ -136,6 +172,7 @@ function Dashboard() {
 
       <div className="results-section">
         <h2>Recent Benchmarks</h2>
+        {pendingRunId && <p>Benchmark {pendingRunId} is running. Results will appear here when it finishes.</p>}
         {benchmarks.length === 0 ? (
           <div className="empty-state">
             <p>No benchmarks yet. Start one to see results here!</p>
@@ -155,8 +192,14 @@ function Dashboard() {
                   </span>
                 </div>
                 <div className="card-body">
-                  <p>Models: {benchmark.models.join(', ')}</p>
-                  {benchmark.summary && <ResultsSummary summary={benchmark.summary} />}
+                  {benchmark.error ? (
+                    <div className="error-banner">{benchmark.error}</div>
+                  ) : (
+                    <>
+                      <p>Models: {benchmark.models.join(', ')}</p>
+                      {benchmark.summary && <ResultsSummary summary={benchmark.summary} />}
+                    </>
+                  )}
                 </div>
               </div>
             ))}

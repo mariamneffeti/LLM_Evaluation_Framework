@@ -1,11 +1,12 @@
 from .base import BaseProvider, LLMResponse
 import requests
+import os
 
 
 class OllamaProvider(BaseProvider):
-    def __init__(self, model="llama3.1:8b",base_url="http://localhost:11434"):
+    def __init__(self, model="llama3.1:8b", base_url=None):
         self.model = model
-        self.base_url = base_url
+        self.base_url = base_url or os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
     def complete(self, question: str) -> LLMResponse:
         response = requests.post(

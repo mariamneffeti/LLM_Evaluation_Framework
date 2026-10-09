@@ -8,9 +8,19 @@ An end-to-end benchmarking platform that runs repeatable LLM evaluations through
 
 ## Demo
 
-> Add a product demo GIF or dashboard screenshot here when available.
+Choose a model, start a benchmark, and review the resulting metrics and per-question answers.
 
-![Dashboard demo placeholder](docs/assets/demo.gif)
+### Dashboard
+
+![Dashboard with the available model providers and recent benchmark runs](docs/assets/demo-dashboard.png)
+
+### Benchmark summary
+
+![Benchmark summary with accuracy, groundedness, and token usage charts](docs/assets/demo-benchmark-summary.png)
+
+### Detailed results
+
+![Per-question benchmark results with accuracy, groundedness, and token counts](docs/assets/demo-benchmark-details.png)
 
 ## Features
 
@@ -39,7 +49,7 @@ flowchart LR
 - **Frontend:** React
 - **Evaluation:** Python benchmark runner and heuristic scoring
 - **Persistence:** SQLite
-- **Providers:** Groq, GitHub Models, Google Gemini, and local Ollama
+- **Providers:** Groq, OpenAI, Google Gemini, and local Ollama
 - **Delivery:** Docker, Docker Compose, and GitHub Actions
 
 ## Quickstart
@@ -58,7 +68,7 @@ flowchart LR
    docker compose up --build
    ```
 
-3. Open the dashboard at [http://localhost:3000](http://localhost:3000) or the API at [http://localhost:8000](http://localhost:8000).
+3. Open the dashboard at [http://localhost:3000](http://localhost:3000) or the API at [http://localhost:8001](http://localhost:8001).
 
 ### Manual setup
 
@@ -99,16 +109,16 @@ Example request:
 ```bash
 curl -X POST http://localhost:8000/benchmark/run \
   -H "Content-Type: application/json" \
-  -d '{"dataset_path":"data/dataset.jsonl","models":["gpt-4o-mini"]}'
+  -d '{"dataset_path":"data/dataset.jsonl","models":["openai/gpt-oss-20b"]}'
 ```
 
 ## Supported Models
 
 | Provider | Model identifier | Availability |
 | --- | --- | --- |
-| Groq | `llama-3.1-70b-versatile` | Requires `GROQ_API_KEY` |
-| GitHub Models | `gpt-4o-mini` | Requires `GITHUB_TOKEN` |
-| Google Gemini | `gemini-2.0-flash` | Requires `GOOGLE_API_KEY` |
+| Groq | `openai/gpt-oss-20b` | Requires `GROQ_API_KEY` |
+| OpenAI | `gpt-4o-mini` | Requires `OPENAI_API_KEY` |
+| Google Gemini | `gemini-3.8-flash` | Requires `GOOGLE_API_KEY` |
 | Ollama | `llama3.1:8b` | Requires a local Ollama service and model |
 
 ## Configuration
@@ -118,7 +128,7 @@ curl -X POST http://localhost:8000/benchmark/run \
 | Variable | Purpose |
 | --- | --- |
 | `GROQ_API_KEY` | Groq API access |
-| `GITHUB_TOKEN` | GitHub Models API access |
+| `OPENAI_API_KEY` | OpenAI API access for GPT-4o mini |
 | `GOOGLE_API_KEY` | Gemini API access |
 | `DATABASE_URL` | Documented local SQLite connection setting |
 | `DATASET_PATH` | Default benchmark dataset path |

@@ -23,7 +23,7 @@ nano .env
 Add your API keys to `.env`:
 ```
 GROQ_API_KEY=your_groq_key_here
-GITHUB_TOKEN=your_github_token_here
+OPENAI_API_KEY=your_openai_api_key_here
 GOOGLE_API_KEY=your_google_key_here
 ```
 
@@ -34,7 +34,7 @@ GOOGLE_API_KEY=your_google_key_here
 docker-compose up
 
 # Frontend: http://localhost:3000
-# Backend: http://localhost:8000
+# Backend: http://localhost:8001
 ```
 
 ## 3. Manual Setup (without Docker)
@@ -48,12 +48,12 @@ pip install -r requirements.txt
 
 # Set environment variables (Windows PowerShell)
 $env:GROQ_API_KEY = "your_key"
-$env:GITHUB_TOKEN = "your_token"
+$env:OPENAI_API_KEY = "your_key"
 $env:GOOGLE_API_KEY = "your_key"
 
 # Or on Linux/Mac
 export GROQ_API_KEY="your_key"
-export GITHUB_TOKEN="your_token"
+export OPENAI_API_KEY="your_key"
 export GOOGLE_API_KEY="your_key"
 
 # Run the server
@@ -78,7 +78,7 @@ Frontend will start on `http://localhost:3000`
 ## 4. First Benchmark Run
 
 1. Open http://localhost:3000 in your browser
-2. Select one or more models (e.g., "gpt-4o-mini")
+2. Select one or more models (e.g., "openai/gpt-oss-20b")
 3. Click "Start Benchmark"
 4. Wait for the benchmark to complete (check Terminal/PowerShell for progress)
 5. View results in the dashboard
@@ -102,10 +102,9 @@ Frontend will start on `http://localhost:3000`
 
 | Model | Provider | Status |
 |-------|----------|--------|
-| llama-3.1-70b-versatile | Groq | ✅ Active |
-| llama-3.1-8b-instant | Groq | ✅ Active |
-| gpt-4o-mini | GitHub Models | ✅ Active |
-| gemini-2.0-flash | Google | ⚠️ Quota Limited |
+| openai/gpt-oss-20b | Groq | ✅ Active |
+| gpt-4o-mini | OpenAI | Requires `OPENAI_API_KEY` |
+| gemini-3.8-flash | Google | Requires `GOOGLE_API_KEY` |
 | llama3.1:8b | Ollama (Local) | ⚠️ Requires Local Server |
 
 ## 7. Troubleshooting
@@ -163,7 +162,7 @@ curl -X POST http://localhost:8000/benchmark/run \
   -H "Content-Type: application/json" \
   -d '{
     "dataset_path": "data/dataset.jsonl",
-    "models": ["gpt-4o-mini"]
+    "models": ["openai/gpt-oss-20b"]
   }'
 ```
 

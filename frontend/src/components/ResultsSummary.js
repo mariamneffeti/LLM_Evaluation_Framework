@@ -20,8 +20,8 @@ function ResultsSummary({ summary }) {
     fullName: model,
     accuracy: (metrics.accuracy * 100).toFixed(1),
     grounded: (metrics.grounded * 100).toFixed(1),
-    input_tokens: metrics.avg_input_tokens.toFixed(0),
-    output_tokens: metrics.avg_output_tokens.toFixed(0),
+    input_tokens: Number(metrics.avg_input_tokens) || 0,
+    output_tokens: Number(metrics.avg_output_tokens) || 0,
   }));
 
 

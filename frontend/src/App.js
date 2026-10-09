@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import BenchmarkDetail from './pages/BenchmarkDetail';
 import Compare from './pages/Compare';
 import Navigation from './components/Navigation';
+import { benchmarkAPI } from './api/client';
 import './App.css';
 
 function App() {
@@ -13,12 +14,10 @@ function App() {
     // Check API connection
     const checkConnection = async () => {
       try {
-        const response = await fetch('http://localhost:8000/health');
-        if (response.ok) {
-          setIsConnected(true);
-        }
+        await benchmarkAPI.healthCheck();
+        setIsConnected(true);
       } catch (error) {
-        console.log('API not available yet');
+        setIsConnected(false);
       }
     };
 
@@ -34,7 +33,7 @@ function App() {
         <main className="main-content">
           {!isConnected && (
             <div className="connection-warning">
-              ⚠️ API Server not connected. Make sure FastAPI backend is running on port 8000
+              API server not connected. Make sure the FastAPI backend is running and its URL is configured correctly.
             </div>
           )}
           <Routes>

@@ -1,15 +1,14 @@
-version: '3.8'
-
 services:
   backend:
     build: .
     container_name: llm-eval-backend
     ports:
-      - "8000:8000"
+      - "8001:8000"
     environment:
       - GROQ_API_KEY=${GROQ_API_KEY}
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     volumes:
       - ./data:/app/data
       - ./benchmarks.db:/app/benchmarks.db
@@ -25,7 +24,7 @@ services:
       - ./frontend:/app
       - /app/node_modules
     environment:
-      - REACT_APP_API_URL=http://localhost:8000
+      - REACT_APP_API_URL=http://localhost:8001
     command: sh -c "npm install && npm start"
     depends_on:
       - backend
