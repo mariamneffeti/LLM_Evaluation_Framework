@@ -36,13 +36,7 @@ jobs:
         flake8 backend --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Run backend tests
-      env:
-        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
-      run: |
-        export PYTHONPATH=$PYTHONPATH:$(pwd)
-        python -m pytest test_groq.py -v --tb=short
+      run: python -m pytest tests/ -v --tb=short
   frontend-tests:
     runs-on: ubuntu-latest
     strategy:
