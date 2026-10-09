@@ -1,283 +1,173 @@
 # LLM Evaluation Framework
 
-A full-featured FastAPI + React web application for benchmarking and comparing Large Language Models (LLMs).
+An end-to-end benchmarking platform that runs repeatable LLM evaluations through a FastAPI backend and a React dashboard.
 
-**Features:**
-- 🚀 **FastAPI Backend** - RESTful API for running and tracking benchmarks
-- 🎨 **React Dashboard** - Beautiful UI for viewing results and comparisons
-- 📊 **Rich Visualizations** - Charts and graphs for performance metrics
-- 🗄️ **SQLite Database** - Persistent storage of benchmark results
-- 🐳 **Docker Support** - Container-ready setup for easy deployment
-- 📈 **Model Comparison** - Compare multiple benchmark runs side-by-side
-- ⚡ **Background Tasks** - Benchmarks run asynchronously without blocking UI
+[![CI](https://github.com/mariamneffeti/LLM_Evaluation_Framework/actions/workflows/ci.yml/badge.svg)](https://github.com/mariamneffeti/LLM_Evaluation_Framework/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Quick Start
+## Demo
 
-### Option 1: Docker (Easiest)
+> Add a product demo GIF or dashboard screenshot here when available.
 
-```bash
-# Copy environment file and set your API keys
-cp .env.example .env
-# Edit .env with your actual API keys
+![Dashboard demo placeholder](docs/assets/demo.gif)
 
-# Build and run with Docker Compose
-docker-compose up
-```
+## Features
 
-The app will be available at:
-- Frontend: `http://localhost:3000`
-- Backend API: `http://localhost:8000`
-
-### Option 2: Manual Setup
-
-#### Backend Setup
-
-```bash
-# Install Python dependencies
-cd backend
-pip install -r requirements.txt
-
-# Set environment variables
-export GROQ_API_KEY="your_key"
-export GITHUB_TOKEN="your_token"
-export GOOGLE_API_KEY="your_key"
-
-# Run FastAPI server
-python app.py
-```
-
-Backend will run on `http://localhost:8000`
-
-#### Frontend Setup
-
-```bash
-# Install Node dependencies
-cd frontend
-npm install
-
-# Start React dev server
-npm start
-```
-
-Frontend will run on `http://localhost:3000`
+- Start model benchmarks through a REST API or the React dashboard.
+- Run multiple configured model providers against a JSONL question dataset.
+- Score answer accuracy, groundedness, token usage, and latency.
+- Persist run results and model summaries in SQLite.
+- Review previous runs and compare benchmark summaries in the dashboard.
+- Run the frontend and backend locally or with Docker Compose.
 
 ## Architecture
 
-### Backend (`/backend`)
+```mermaid
+flowchart LR
+    Frontend[React Frontend] -->|REST requests| API[FastAPI]
+    API -->|background benchmark| Providers[Model Providers]
+    Providers -->|responses| Eval[Evaluation and Scoring]
+    Eval -->|results and summaries| SQLite[(SQLite)]
+    SQLite -->|persisted runs| API
+    API -->|JSON responses| Frontend
+```
 
-- **app.py** - Main FastAPI application with endpoints
-- **database.py** - SQLAlchemy models and database setup
-- **schemas.py** - Pydantic request/response models
+## Stack
 
-**API Endpoints:**
-- `POST /benchmark/run` - Start a new benchmark
-- `GET /benchmark/{run_id}` - Get results for a specific run
-- `GET /benchmarks` - List all benchmarks
-- `GET /benchmarks/compare` - Compare multiple runs
-- `GET /models` - Get available models
+- **Backend:** Python, FastAPI, Pydantic, SQLAlchemy
+- **Frontend:** React
+- **Evaluation:** Python benchmark runner and heuristic scoring
+- **Persistence:** SQLite
+- **Providers:** Groq, GitHub Models, Google Gemini, and local Ollama
+- **Delivery:** Docker, Docker Compose, and GitHub Actions
 
-### Frontend (`/frontend`)
+## Quickstart
 
-- **src/pages/** - Main pages (Dashboard, BenchmarkDetail, Compare)
-- **src/components/** - Reusable components
-- **src/api/** - API client for backend communication
-- **src/styles/** - CSS stylesheets
+### Docker Compose
+
+1. Copy the example configuration and add credentials for any hosted models you plan to use:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Start the services:
+
+   ```bash
+   docker compose up --build
+   ```
+
+3. Open the dashboard at [http://localhost:3000](http://localhost:3000) or the API at [http://localhost:8000](http://localhost:8000).
+
+### Manual setup
+
+Start the backend in the repository root:
+
+```bash
+python -m venv .venv
+# Windows: .venv\Scripts\Activate.ps1
+source .venv/bin/activate
+python -m pip install -r backend/requirements.txt
+python backend/app.py
+```
+
+In another terminal, install and start the React frontend:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+The frontend uses `http://localhost:8000` by default. Hosted provider credentials are optional for browsing the API and running tests; add them to `.env` to benchmark those providers. Ollama requires a locally running Ollama service and the configured model.
+
+## API Endpoints
+
+| Method | Endpoint | Description |
+| --- | --- | --- |
+| `GET` | `/` | API name and version |
+| `GET` | `/health` | Health status |
+| `GET` | `/models` | Configured model identifiers |
+| `POST` | `/benchmark/run` | Queue a benchmark run |
+| `GET` | `/benchmark/{run_id}` | Retrieve a run’s results and summary |
+| `GET` | `/benchmarks` | List recent benchmark runs |
+| `GET` | `/benchmarks/compare?run_ids=id1,id2` | Retrieve summaries for selected runs |
+
+Example request:
+
+```bash
+curl -X POST http://localhost:8000/benchmark/run \
+  -H "Content-Type: application/json" \
+  -d '{"dataset_path":"data/dataset.jsonl","models":["gpt-4o-mini"]}'
+```
 
 ## Supported Models
 
-Currently supports:
-- **Groq**: `llama-3.1-70b-versatile`, `llama-3.1-8b-instant`
-- **GitHub Models**: `gpt-4o-mini`
-- **Google Gemini**: `gemini-2.0-flash`
-- **Ollama**: `llama3.1:8b` (local)
+| Provider | Model identifier | Availability |
+| --- | --- | --- |
+| Groq | `llama-3.1-70b-versatile` | Requires `GROQ_API_KEY` |
+| GitHub Models | `gpt-4o-mini` | Requires `GITHUB_TOKEN` |
+| Google Gemini | `gemini-2.0-flash` | Requires `GOOGLE_API_KEY` |
+| Ollama | `llama3.1:8b` | Requires a local Ollama service and model |
 
 ## Configuration
 
-Create a `.env` file (copy from `.env.example`):
+`.env.example` documents the optional provider credentials, local database and dataset settings, and frontend/backend ports. Copy it to `.env` for local use, then fill in only the credentials for providers you intend to call. `.env` is ignored by Git. Tests use a mocked provider and do not need credentials.
+
+| Variable | Purpose |
+| --- | --- |
+| `GROQ_API_KEY` | Groq API access |
+| `GITHUB_TOKEN` | GitHub Models API access |
+| `GOOGLE_API_KEY` | Gemini API access |
+| `DATABASE_URL` | Documented local SQLite connection setting |
+| `DATASET_PATH` | Default benchmark dataset path |
+| `REACT_APP_API_URL` | Backend URL used by the frontend |
+
+The benchmark endpoint accepts `dataset_path` and `models` in its JSON request. When `models` is omitted, it uses all configured model identifiers.
+
+## Testing
+
+Install the backend dependencies and pytest, then run the test suite from the repository root:
 
 ```bash
-GROQ_API_KEY=your_groq_api_key
-GITHUB_TOKEN=your_github_token
-GOOGLE_API_KEY=your_google_api_key
-DATASET_PATH=data/dataset.jsonl
+python -m pip install -r backend/requirements.txt pytest
+python -m pytest tests/ -v
 ```
 
-## Database
+The API tests use FastAPI’s `TestClient`; the evaluation test supplies a local fake provider. No real provider calls or API keys are needed. GitHub Actions runs pytest on pushes and pull requests.
 
-Results are stored in SQLite (`benchmarks.db`). Each benchmark run includes:
-- Run ID and timestamp
-- Dataset path
-- Complete results for each test
-- Summary statistics by model
+## Project Structure
 
-To view the database:
-```bash
-sqlite3 benchmarks.db "SELECT * FROM benchmark_runs;"
-```
-
-## File Structure
-
-```
+```text
 .
-├── backend/
-│   ├── app.py              # FastAPI application
-│   ├── database.py         # Database models
-│   ├── schemas.py          # Pydantic schemas
-│   └── requirements.txt    # Python dependencies
-├── frontend/
-│   ├── src/
-│   │   ├── pages/          # Page components
-│   │   ├── components/     # Reusable components
-│   │   ├── api/            # API client
-│   │   └── styles/         # CSS files
-│   ├── public/
-│   └── package.json        # Node dependencies
-├── eval/                   # Benchmark evaluation modules
-├── providers/              # LLM provider implementations
-├── data/                   # Datasets and results
-├── Dockerfile              # Container definition
-├── docker-compose.yml      # Multi-container setup
-└── README.md              # This file
+├── backend/                 # FastAPI application, schemas, and SQLite setup
+├── data/                    # Small sample JSONL dataset
+├── eval/                    # Benchmark runner, scoring, and reporting
+├── frontend/                # React dashboard and API client
+├── providers/               # Provider adapters and shared response interface
+├── tests/                   # API and mocked evaluation tests
+├── .github/workflows/       # CI and project automation
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
 ```
 
-## Running Benchmarks
+## Key Technical Decisions
 
-### Via Web UI
+- **Background execution:** The API queues benchmark work with FastAPI background tasks and returns a run ID so the dashboard can retrieve results separately.
+- **Provider abstraction:** Each provider implements a common `complete` interface and returns a shared response shape, so the benchmark runner can evaluate providers uniformly.
+- **Persistence:** SQLAlchemy stores each run’s result list and summary as JSON fields in SQLite.
+- **SQLite:** A file-backed database keeps local setup and portfolio demos simple while retaining benchmark history across restarts. It suits this single-instance project; a multi-instance deployment would need a shared database service.
+- **Scoring:** Accuracy uses normalized exact-answer containment, groundedness uses expected-answer keyword overlap, and token counts come from provider responses.
 
-1. Open `http://localhost:3000`
-2. Select models to benchmark
-3. Click "Start Benchmark"
-4. Monitor progress in the UI
-5. View results and charts once complete
+## Results
 
-### Via API
+Add measured results from reproducible benchmark runs. No sample measurements are published yet.
 
-```bash
-# Start a benchmark
-curl -X POST http://localhost:8000/benchmark/run \
-  -H "Content-Type: application/json" \
-  -d '{"dataset_path": "data/dataset.jsonl"}'
-
-# Expected response:
-# {"run_id": "a1b2c3d4", "status": "started", ...}
-
-# Get results
-curl http://localhost:8000/benchmark/a1b2c3d4
-```
-
-## Performance & Results
-
-Results include:
-- **Accuracy**: Exact match percentage
-- **Grounded**: Non-hallucination score
-- **Token Usage**: Input and output token counts
-- **Latency**: Response time metrics (if logged)
-
-Results are persisted to database and can be:
-- Viewed in the dashboard
-- Exported as JSON
-- Compared across multiple runs
-
-## Deployment
-
-### AWS EC2
-
-```bash
-git clone https://github.com/yourusername/llm-eval-framework.git
-cd llm-eval-framework
-docker-compose up -d
-```
-
-### Google Cloud Run
-
-```bash
-gcloud run deploy llm-eval-backend \
-  --source . \
-  --platform managed \
-  --region us-central1
-```
-
-### Heroku
-
-```bash
-heroku create llm-eval
-git push heroku main
-```
-
-## Development
-
-### Adding a New LLM Provider
-
-1. Create a new provider in `providers/`:
-
-```python
-from providers.base import BaseProvider, LLMResponse
-
-class MyProvider(BaseProvider):
-    def __init__(self):
-        pass
-    
-    def complete(self, question: str) -> LLMResponse:
-        # Implement API call
-        return LLMResponse(
-            text=response_text,
-            input_tokens=input_count,
-            output_tokens=output_count
-        )
-```
-
-2. Register in `backend/app.py`:
-
-```python
-PROVIDERS = {
-    "my-model": lambda: MyProvider(),
-    ...
-}
-```
-
-### Adding a New Dashboard Component
-
-1. Create component in `frontend/src/components/`
-2. Import and use in pages
-3. Add styling to `frontend/src/styles/`
-
-## Troubleshooting
-
-### API Connection Failed
-- Ensure backend is running on `http://localhost:8000`
-- Check firewall/port settings
-- Verify environment variables are set
-
-### Benchmark Hangs
-- Check API key validity
-- Verify dataset path is correct
-- Check backend logs for errors
-
-### Results Not Saving
-- Ensure `benchmarks.db` is writable
-- Check disk space
-- Verify SQLite is installed
-
-## Contributing
-
-Contributions welcome! To contribute:
-
-1. Fork the repository
-2. Create a feature branch
-3. Commit changes
-4. Push to branch
-5. Create a Pull Request
-
-## License
-
-MIT License - see LICENSE file for details
-
-## Support
-
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check existing documentation
-- Review example results in `/data/results/`
+| Model | Accuracy | Grounded | Input Tokens | Output Tokens | Latency ms |
+| --- | --- | --- | --- | --- | --- |
+| _Add benchmark result_ | — | — | — | — | — |
 
 ## Roadmap
 
@@ -289,3 +179,11 @@ For issues, questions, or suggestions:
 - [ ] Multi-user support with authentication
 - [ ] Webhook notifications
 - [ ] Model registry with versioning
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
+## Contact
+
+**Mariam Neffeti** · [GitHub](https://github.com/mariamneffeti)
